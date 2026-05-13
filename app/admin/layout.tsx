@@ -1,0 +1,157 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { ThemeToggle } from '@/components/theme-toggle';
+
+export default function AdminLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    // Check if we're on the login page
+    const isLoginPage = pathname === '/admin/login';
+
+    useEffect(() => {
+        // Skip auth check for login page
+        if (isLoginPage) {
+            setLoading(false);
+            return;
+        }
+
+        const checkAuth = async () => {
+            try {
+                const res = await fetch('/api/auth/check');
+                const data = await res.json();
+
+                if (!data.authenticated) {
+                    router.push('/admin/login');
+                    return;
+                }
+
+                if (data.user?.role !== 'admin') {
+                    router.push('/dashboard');
+                    return;
+                }
+
+                setIsAdmin(true);
+            } catch (error) {
+                router.push('/admin/login');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAuth();
+    }, [router, isLoginPage]);
+
+    // Email scheduler (only for admin pages, not login)
+    useEffect(() => {
+        if (!isAdmin || isLoginPage) return;
+
+        const sendBatchEmails = async () => {
+            try {
+                const res = await fetch('/api/cron/send-attendance-emails');
+                const data = await res.json();
+                if (data.found > 0) {
+                    console.log(`📧 Sent ${data.sent} emails`);
+                }
+            } catch (error) {
+                console.error('Batch email error:', error);
+            }
+        };
+
+        sendBatchEmails();
+        const interval = setInterval(sendBatchEmails, 60 * 1000);
+        return () => clearInterval(interval);
+    }, [isAdmin, isLoginPage]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+                <div className="text-center" style={{ color: 'var(--text-secondary)' }}>Loading...</div>
+            </div>
+        );
+    }
+
+    // For login page, just render children without admin header
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
+
+    if (!isAdmin) {
+        return null;
+    }
+
+    return (
+        <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+            {/* Admin Header */}
+            <div className="border-b p-4 flex justify-between items-center" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+                <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Admin Panel</h1>
+                <div className="flex items-center gap-3">
+                    <ThemeToggle />
+                    <Link href="/" className="px-3 py-1 rounded-lg text-sm border" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                        Home
+                    </Link>
+                    <button
+                        onClick={async () => {
+                            await fetch('/api/admin/logout', { method: 'POST' });
+                            window.location.href = '/admin/login';
+                        }}
+                        className="px-3 py-1 rounded-lg text-sm border hover:border-red-500 transition"
+                        style={{ borderColor: 'var(--border)', color: '#ef4444' }}
+                    >
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            {/* Navigation Tabs - Scrollable on mobile */}
+            <div className="px-4 pt-4">
+                <div className="flex gap-4 border-b overflow-x-auto pb-0.5" style={{ borderColor: 'var(--border)' }}>
+                    <Link href="/admin" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        👨‍🎓 Students
+                    </Link>
+                    <Link href="/admin/dashboard" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/dashboard' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        📊 Dashboard
+                    </Link>
+                    <Link href="/admin/attendance" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/attendance' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        📋 Attendance
+                    </Link>
+                    <Link href="/admin/qr" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/qr' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        📱 QR Codes
+                    </Link>
+                    <Link href="/admin/import" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/import' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        📥 Import
+                    </Link>
+                    <Link href="/admin/holidays" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/holidays' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        📅 Holidays
+                    </Link>
+                    <Link href="/admin/logs" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/logs' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        📜 Logs
+                    </Link>
+                    <Link href="/admin/backup" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/backup' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        💾 Backup
+                    </Link>
+                    <Link href="/admin/actions" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/actions' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        ⚡ Actions
+                    </Link>
+                    <Link href="/admin/staff" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/staff' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
+                        👨‍🏫 Staff
+                    </Link>
+                </div>
+            </div>
+
+            {/* Page Content */}
+            <div className="p-6">
+                {children}
+            </div>
+        </div>
+    );
+}
