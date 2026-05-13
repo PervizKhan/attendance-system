@@ -2,17 +2,21 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Student from '@/lib/models/Student';
 
+// 🔑 FORCE DYNAMIC - NO CACHING
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     await connectDB();
     
-    // Get ONLY students with face descriptors registered
     const students = await Student.find({ 
       isActive: true,
       faceDescriptor: { $exists: true, $ne: null }
     }).select('_id studentId name className faceDescriptor contactEmail');
     
-    // Convert faceDescriptor from number array if needed
+    console.log(`✅ Kiosk API: Found ${students.length} students with faces`);
+    
     const formattedStudents = students.map(s => ({
       _id: s._id.toString(),
       studentId: s.studentId,
@@ -22,11 +26,9 @@ export async function GET() {
       contactEmail: s.contactEmail,
     }));
     
-    console.log(`Kiosk API: Returning ${formattedStudents.length} students with registered faces`);
-    
     return NextResponse.json(formattedStudents);
   } catch (error) {
-    console.error('Error fetching students for kiosk:', error);
+    console.error('Error fetching students:', error);
     return NextResponse.json([], { status: 500 });
   }
 }
