@@ -189,6 +189,28 @@ textarea::placeholder {
   }
 }
 
+
+
+
+
+
+/* Hide scrollbar for mobile while keeping functionality */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Optional: hide scrollbar completely */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border);

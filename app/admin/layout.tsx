@@ -112,41 +112,111 @@ export default function AdminLayout({
                 </div>
             </div>
 
-            {/* Navigation Tabs - Scrollable on mobile */}
-            <div className="px-4 pt-4">
-                <div className="flex gap-4 border-b overflow-x-auto pb-0.5" style={{ borderColor: 'var(--border)' }}>
-                    <Link href="/admin" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        👨‍🎓 Students
-                    </Link>
-                    <Link href="/admin/dashboard" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/dashboard' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        📊 Dashboard
-                    </Link>
-                    <Link href="/admin/attendance" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/attendance' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        📋 Attendance
-                    </Link>
-                    <Link href="/admin/qr" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/qr' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        📱 QR Codes
-                    </Link>
-                    <Link href="/admin/import" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/import' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        📥 Import
-                    </Link>
-                    <Link href="/admin/holidays" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/holidays' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        📅 Holidays
-                    </Link>
-                    <Link href="/admin/logs" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/logs' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        📜 Logs
-                    </Link>
-                    <Link href="/admin/backup" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/backup' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        💾 Backup
-                    </Link>
-                    <Link href="/admin/actions" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/actions' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        ⚡ Actions
-                    </Link>
-                    <Link href="/admin/staff" className={`px-4 py-2 whitespace-nowrap ${pathname === '/admin/staff' ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]' : 'opacity-70'}`}>
-                        👨‍🏫 Staff
-                    </Link>
-                </div>
-            </div>
+            {/* Navigation Tabs - Mobile Friendly */}
+<div className="px-4 pt-4">
+  <div className="flex gap-2 overflow-x-auto pb-2 -mb-0.5 scrollbar-thin" style={{ borderColor: 'var(--border)', WebkitOverflowScrolling: 'touch' }}>
+    <Link
+      href="/admin"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      👨‍🎓
+    </Link>
+    <Link
+      href="/admin/staff"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/staff'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      👨‍🏫
+    </Link>
+    <Link
+      href="/admin/dashboard"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/dashboard'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      📊
+    </Link>
+    <Link
+      href="/admin/attendance"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/attendance'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      📋
+    </Link>
+    <Link
+      href="/admin/qr"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/qr'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      📱
+    </Link>
+    <Link
+      href="/admin/import"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/import'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      📥
+    </Link>
+    <Link
+      href="/admin/holidays"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/holidays'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      📅
+    </Link>
+    <Link
+      href="/admin/logs"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/logs'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      📜
+    </Link>
+    <Link
+      href="/admin/backup"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/backup'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      💾
+    </Link>
+    <Link
+      href="/admin/actions"
+      className={`px-3 py-2 text-sm whitespace-nowrap rounded-t-lg ${
+        pathname === '/admin/actions'
+          ? 'border-b-2 border-[var(--accent)] text-[var(--accent)] font-medium'
+          : 'opacity-70'
+      }`}
+    >
+      ⚡
+    </Link>
+  </div>
+</div>
 
             {/* Page Content */}
             <div className="p-6">

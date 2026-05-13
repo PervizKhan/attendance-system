@@ -175,58 +175,113 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', padding: '24px' }}>
+    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', padding: '16px' }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>Student Management</h1>
-        <button onClick={() => setShowForm(true)} className="btn-primary">+ Add Student</button>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--accent)' }}>Student Management</h1>
+        <button onClick={() => setShowForm(true)} className="btn-primary text-sm md:text-base px-3 py-1 md:px-4 md:py-2">+ Add</button>
       </div>
 
       {/* Search and Filter */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div className="flex-1 min-w-[200px]">
-          <input type="text" placeholder="🔍 Search by name or ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input" />
+      <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex-1 min-w-[150px]">
+          <input type="text" placeholder="🔍 Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input text-sm" />
         </div>
-        <div className="w-48">
-          <select value={filterClass} onChange={(e) => setFilterClass(e.target.value)} className="input">
+        <div className="w-32">
+          <select value={filterClass} onChange={(e) => setFilterClass(e.target.value)} className="input text-sm">
             <option value="">All Classes</option>
             {uniqueClasses.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         {(searchTerm || filterClass) && (
-          <button onClick={() => { setSearchTerm(''); setFilterClass(''); }} className="btn-secondary">Clear Filters</button>
+          <button onClick={() => { setSearchTerm(''); setFilterClass(''); }} className="btn-secondary text-sm px-3 py-1">
+            Clear
+          </button>
         )}
       </div>
 
-      {/* Student Table */}
-      <div className="rounded-xl shadow overflow-hidden border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+      {/* Mobile: Card View */}
+      <div className="block md:hidden space-y-3">
+        {filteredStudents.map((student) => (
+          <div key={student._id} className="p-4 rounded-xl border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <h3 className="font-bold text-base">{student.name}</h3>
+                <p className="text-xs opacity-70 mt-0.5">ID: {student.studentId} • Class: {student.className}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setEditingStudent(student); setEditFormData({ name: student.name, fatherName: student.fatherName, className: student.className, studentId: student.studentId, contactEmail: student.contactEmail || '', parentPhone: student.parentPhone || '', address: student.address || '' }); setShowEditModal(true); }}
+                  className="text-blue-500 text-lg px-1"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button onClick={() => deleteStudent(student._id)} className="text-red-500 text-lg px-1" title="Delete">
+                  🗑️
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+              <div>
+                <span className="text-xs opacity-70 block">Father's Name</span>
+                <span className="text-sm">{student.fatherName}</span>
+              </div>
+              <div>
+                <span className="text-xs opacity-70 block">WhatsApp</span>
+                <span className="text-sm">{student.parentPhone || '—'}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-xs opacity-70 block">Email</span>
+                <span className="text-xs break-all">{student.contactEmail}</span>
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+              <div>
+                {student.hasFace ? (
+                  <span className="text-green-500 text-sm flex items-center gap-1">✓ Face Registered</span>
+                ) : (
+                  <button onClick={() => startFaceCapture(student)} className="text-accent text-sm flex items-center gap-1">
+                    📷 Register Face
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table View */}
+      <div className="hidden md:block rounded-xl border overflow-hidden" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b" style={{ borderColor: 'var(--border)' }}>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>ID</th>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>Name</th>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>Father Name</th>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>Class</th>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>WhatsApp</th>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>Face</th>
-                <th className="p-3" style={{ color: 'var(--accent)' }}>Actions</th>
+                <th className="p-2 text-sm">ID</th>
+                <th className="p-2 text-sm">Name</th>
+                <th className="p-2 text-sm">Father Name</th>
+                <th className="p-2 text-sm">Class</th>
+                <th className="p-2 text-sm">WhatsApp</th>
+                <th className="p-2 text-sm">Face</th>
+                <th className="p-2 text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.map((student) => (
                 <tr key={student._id} className="border-b" style={{ borderColor: 'var(--border)' }}>
-                  <td className="p-3" style={{ color: 'var(--text-primary)' }}>{student.studentId}</td>
-                  <td className="p-3" style={{ color: 'var(--text-primary)' }}>{student.name}</td>
-                  <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{student.fatherName}</td>
-                  <td className="p-3" style={{ color: 'var(--text-primary)' }}>{student.className}</td>
-                  <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{student.parentPhone || 'Not added'}</td>
-                  <td className="p-3">{student.hasFace ? <span className="text-green-500">✓</span> : <button onClick={() => startFaceCapture(student)} className="text-accent text-sm">Register</button>}</td>
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      <button onClick={() => { setEditingStudent(student); setEditFormData({ name: student.name, fatherName: student.fatherName, className: student.className, studentId: student.studentId, contactEmail: student.contactEmail || '', parentPhone: student.parentPhone || '', address: student.address || '' }); setShowEditModal(true); }} className="text-blue-500 hover:text-blue-700">✏️</button>
-                      <button onClick={() => deleteStudent(student._id)} className="text-red-500 hover:text-red-700">🗑️</button>
-                    </div>
+                  <td className="p-2 text-sm">{student.studentId}</td>
+                  <td className="p-2 text-sm">{student.name}</td>
+                  <td className="p-2 text-sm">{student.fatherName}</td>
+                  <td className="p-2 text-sm">{student.className}</td>
+                  <td className="p-2 text-sm">{student.parentPhone || '-'}</td>
+                  <td className="p-2 text-sm">
+                    {student.hasFace ? <span className="text-green-500">✓</span> : <button onClick={() => startFaceCapture(student)} className="text-accent text-sm">Register</button>}
+                  </td>
+                  <td className="p-2 text-sm">
+                    <button onClick={() => { setEditingStudent(student); setEditFormData({ name: student.name, fatherName: student.fatherName, className: student.className, studentId: student.studentId, contactEmail: student.contactEmail || '', parentPhone: student.parentPhone || '', address: student.address || '' }); setShowEditModal(true); }} className="text-blue-500 mr-2">Edit</button>
+                    <button onClick={() => deleteStudent(student._id)} className="text-red-500">Delete</button>
                   </td>
                 </tr>
               ))}
@@ -235,21 +290,26 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* No Results */}
+      {filteredStudents.length === 0 && (
+        <div className="text-center py-8 opacity-70">No students found</div>
+      )}
+
       {/* Add Student Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="rounded-xl p-6 w-full max-w-md" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--accent)' }}>Add Student</h2>
             <form onSubmit={handleSubmit} className="space-y-3">
-              <input type="text" placeholder="Student ID*" className="input" value={formData.studentId} onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} required />
-              <input type="text" placeholder="Full Name*" className="input" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-              <input type="text" placeholder="Father's Name*" className="input" value={formData.fatherName} onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })} required />
-              <input type="text" placeholder="Class*" className="input" value={formData.className} onChange={(e) => setFormData({ ...formData, className: e.target.value })} required />
-              <input type="email" placeholder="Parent Email*" className="input" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} required />
-              <input type="tel" placeholder="Parent WhatsApp" className="input" value={formData.parentPhone} onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })} />
+              <input type="text" placeholder="Student ID*" className="input text-sm" value={formData.studentId} onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} required />
+              <input type="text" placeholder="Full Name*" className="input text-sm" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+              <input type="text" placeholder="Father's Name*" className="input text-sm" value={formData.fatherName} onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })} required />
+              <input type="text" placeholder="Class*" className="input text-sm" value={formData.className} onChange={(e) => setFormData({ ...formData, className: e.target.value })} required />
+              <input type="email" placeholder="Parent Email*" className="input text-sm" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} required />
+              <input type="tel" placeholder="Parent WhatsApp" className="input text-sm" value={formData.parentPhone} onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })} />
               <div className="flex gap-3 pt-3">
-                <button type="submit" className="btn-primary flex-1">Save</button>
-                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">Cancel</button>
+                <button type="submit" className="btn-primary flex-1 text-sm py-2">Save</button>
+                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1 text-sm py-2">Cancel</button>
               </div>
             </form>
           </div>
@@ -258,20 +318,20 @@ export default function AdminPage() {
 
       {/* Edit Student Modal */}
       {showEditModal && editingStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="rounded-xl p-6 w-full max-w-md" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--accent)' }}>Edit Student</h2>
             <form onSubmit={handleUpdateStudent} className="space-y-3">
-              <input type="text" placeholder="Student ID*" className="input" value={editFormData.studentId} onChange={(e) => setEditFormData({ ...editFormData, studentId: e.target.value })} required />
-              <input type="text" placeholder="Full Name*" className="input" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} required />
-              <input type="text" placeholder="Father's Name*" className="input" value={editFormData.fatherName} onChange={(e) => setEditFormData({ ...editFormData, fatherName: e.target.value })} required />
-              <input type="text" placeholder="Class*" className="input" value={editFormData.className} onChange={(e) => setEditFormData({ ...editFormData, className: e.target.value })} required />
-              <input type="email" placeholder="Parent Email*" className="input" value={editFormData.contactEmail} onChange={(e) => setEditFormData({ ...editFormData, contactEmail: e.target.value })} required />
-              <input type="tel" placeholder="Parent WhatsApp" className="input" value={editFormData.parentPhone} onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })} />
-              <textarea placeholder="Address" className="input" rows={2} value={editFormData.address} onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} />
+              <input type="text" placeholder="Student ID*" className="input text-sm" value={editFormData.studentId} onChange={(e) => setEditFormData({ ...editFormData, studentId: e.target.value })} required />
+              <input type="text" placeholder="Full Name*" className="input text-sm" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} required />
+              <input type="text" placeholder="Father's Name*" className="input text-sm" value={editFormData.fatherName} onChange={(e) => setEditFormData({ ...editFormData, fatherName: e.target.value })} required />
+              <input type="text" placeholder="Class*" className="input text-sm" value={editFormData.className} onChange={(e) => setEditFormData({ ...editFormData, className: e.target.value })} required />
+              <input type="email" placeholder="Parent Email*" className="input text-sm" value={editFormData.contactEmail} onChange={(e) => setEditFormData({ ...editFormData, contactEmail: e.target.value })} required />
+              <input type="tel" placeholder="Parent WhatsApp" className="input text-sm" value={editFormData.parentPhone} onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })} />
+              <textarea placeholder="Address" className="input text-sm" rows={2} value={editFormData.address} onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} />
               <div className="flex gap-3 pt-3">
-                <button type="submit" className="btn-primary flex-1">Update</button>
-                <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary flex-1">Cancel</button>
+                <button type="submit" className="btn-primary flex-1 text-sm py-2">Update</button>
+                <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary flex-1 text-sm py-2">Cancel</button>
               </div>
             </form>
           </div>
@@ -280,19 +340,19 @@ export default function AdminPage() {
 
       {/* Face Capture Modal */}
       {showFaceCapture && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="rounded-xl p-6 w-full max-w-md text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--accent)' }}>Register Face: {selectedStudent.name}</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-xl p-5 w-full max-w-md text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <h2 className="text-lg font-bold mb-3" style={{ color: 'var(--accent)' }}>Register Face: {selectedStudent.name}</h2>
             {modelsLoaded ? (
               <>
-                <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="w-full rounded-lg" videoConstraints={{ width: { ideal: 480 }, height: { ideal: 640 }, facingMode: "user" }} />
+                <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="w-full rounded-lg" />
                 <p className="mt-3 text-sm" style={{ color: 'var(--text-secondary)' }}>{status || 'Center face and click Capture'}</p>
                 <div className="flex gap-3 mt-4">
-                  <button onClick={captureFace} disabled={capturing} className="btn-primary flex-1">{capturing ? 'Capturing...' : 'Capture Face'}</button>
-                  <button onClick={() => setShowFaceCapture(false)} className="btn-secondary flex-1">Cancel</button>
+                  <button onClick={captureFace} disabled={capturing} className="btn-primary flex-1 text-sm py-2">{capturing ? 'Capturing...' : 'Capture Face'}</button>
+                  <button onClick={() => setShowFaceCapture(false)} className="btn-secondary flex-1 text-sm py-2">Cancel</button>
                 </div>
               </>
-            ) : (<p style={{ color: 'var(--text-secondary)' }}>Loading face models...</p>)}
+            ) : (<p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading face models...</p>)}
           </div>
         </div>
       )}
