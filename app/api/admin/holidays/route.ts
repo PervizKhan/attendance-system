@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Holiday from '@/lib/models/Holiday';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

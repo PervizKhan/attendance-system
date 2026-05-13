@@ -4,6 +4,7 @@ import Student from '@/lib/models/Student';
 import Attendance from '@/lib/models/Attendance';
 import Admin from '@/lib/models/Admin';
 import Holiday from '@/lib/models/Holiday';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
