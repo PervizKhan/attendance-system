@@ -225,6 +225,16 @@ export default function AdminLayout({
 >
   👥 Admins
 </Link>
+<Link
+  href="/admin/face-training"
+  className={`px-4 py-2 whitespace-nowrap ${
+    pathname === '/admin/face-training'
+      ? 'border-b-2 border-[var(--accent)] text-[var(--accent)]'
+      : 'opacity-70'
+  }`}
+>
+  🎯 Face Training
+</Link>
   </div>
 </div>
 
