@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Student from '@/lib/models/Student';
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
@@ -20,12 +21,8 @@ export async function POST(req: NextRequest) {
     
     console.log('Headers found:', headers);
     
-    const results = [];
     const errors = [];
     let successCount = 0;
-    
-    // Define required fields mapping
-    const requiredFields = ['name', 'fathername', 'studentid', 'classname', 'contactemail'];
     
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -40,6 +37,15 @@ export async function POST(req: NextRequest) {
         else if (header === 'fathername') studentData.fatherName = values[idx];
         else if (header === 'studentid') studentData.studentId = values[idx];
         else if (header === 'classname') studentData.className = values[idx];
+        else if (header === 'classnumber') {
+          // Handle class number (convert "9" to "Class 9")
+          const classNum = parseInt(values[idx]);
+          if (!isNaN(classNum) && classNum >= 1 && classNum <= 12) {
+            studentData.className = `Class ${classNum}`;
+          } else {
+            studentData.className = values[idx]; // fallback to original
+          }
+        }
         else if (header === 'contactemail') studentData.contactEmail = values[idx];
         else if (header === 'parentphone') studentData.parentPhone = values[idx];
         else if (header === 'contactphone') studentData.contactPhone = values[idx];
@@ -64,6 +70,13 @@ export async function POST(req: NextRequest) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(studentData.contactEmail)) {
         errors.push(`Row ${i}: Invalid email format: ${studentData.contactEmail}`);
+        continue;
+      }
+      
+      // Validate class format (should be "Class X" after conversion)
+      const classMatch = studentData.className.match(/Class (\d+)/i);
+      if (!classMatch || parseInt(classMatch[1]) < 1 || parseInt(classMatch[1]) > 12) {
+        errors.push(`Row ${i}: Invalid class format. Use number 1-12 (e.g., "9" or "Class 9")`);
         continue;
       }
       

@@ -27,20 +27,25 @@ export default function AdminPage() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showFaceCapture, setShowFaceCapture] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  
+  // Form data with class number
   const [formData, setFormData] = useState({
     studentId: '',
     rollNo: '',
     name: '',
     fatherName: '',
-    className: '',
+    classNumber: '',  // User enters number
+    className: '',    // Auto-formatted as "Class X"
     address: '',
     contactEmail: '',
     contactPhone: '',
     parentPhone: '',
   });
+  
   const [editFormData, setEditFormData] = useState({
     name: '',
     fatherName: '',
+    classNumber: '',
     className: '',
     studentId: '',
     contactEmail: '',
@@ -53,6 +58,15 @@ export default function AdminPage() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [status, setStatus] = useState('');
+
+  // Helper function to format class name
+  const formatClassName = (value: string) => {
+    const num = parseInt(value);
+    if (!isNaN(num) && num >= 1 && num <= 12) {
+      return `Class ${num}`;
+    }
+    return '';
+  };
 
   // Load face-api.js
   useEffect(() => {
@@ -93,17 +107,38 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          className: formData.classNumber ? `Class ${formData.classNumber}` : '',
+        }),
       });
       if (res.ok) {
         setShowForm(false);
         setFormData({
-          studentId: '', rollNo: '', name: '', fatherName: '', className: '',
-          address: '', contactEmail: '', contactPhone: '', parentPhone: '',
+          studentId: '', rollNo: '', name: '', fatherName: '',
+          classNumber: '', className: '', address: '', contactEmail: '', contactPhone: '', parentPhone: '',
         });
         fetchStudents();
       }
     } catch (error) { console.error('Error adding student:', error); }
+  };
+
+  const handleEditStudent = (student: Student) => {
+    // Extract class number from "Class 9" format
+    const classNumber = student.className?.replace('Class ', '') || '';
+    
+    setEditingStudent(student);
+    setEditFormData({
+      name: student.name,
+      fatherName: student.fatherName,
+      classNumber: classNumber,
+      className: student.className,
+      studentId: student.studentId,
+      contactEmail: student.contactEmail || '',
+      parentPhone: student.parentPhone || '',
+      address: student.address || '',
+    });
+    setShowEditModal(true);
   };
 
   const handleUpdateStudent = async (e: React.FormEvent) => {
@@ -112,7 +147,16 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/students', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingStudent?._id, ...editFormData }),
+        body: JSON.stringify({ 
+          id: editingStudent?._id,
+          name: editFormData.name,
+          fatherName: editFormData.fatherName,
+          className: editFormData.classNumber ? `Class ${editFormData.classNumber}` : '',
+          studentId: editFormData.studentId,
+          contactEmail: editFormData.contactEmail,
+          parentPhone: editFormData.parentPhone,
+          address: editFormData.address,
+        }),
       });
       if (res.ok) {
         setShowEditModal(false);
@@ -211,7 +255,7 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setEditingStudent(student); setEditFormData({ name: student.name, fatherName: student.fatherName, className: student.className, studentId: student.studentId, contactEmail: student.contactEmail || '', parentPhone: student.parentPhone || '', address: student.address || '' }); setShowEditModal(true); }}
+                  onClick={() => handleEditStudent(student)}
                   className="text-blue-500 text-lg px-1"
                   title="Edit"
                 >
@@ -280,7 +324,7 @@ export default function AdminPage() {
                     {student.hasFace ? <span className="text-green-500">✓</span> : <button onClick={() => startFaceCapture(student)} className="text-accent text-sm">Register</button>}
                   </td>
                   <td className="p-2 text-sm">
-                    <button onClick={() => { setEditingStudent(student); setEditFormData({ name: student.name, fatherName: student.fatherName, className: student.className, studentId: student.studentId, contactEmail: student.contactEmail || '', parentPhone: student.parentPhone || '', address: student.address || '' }); setShowEditModal(true); }} className="text-blue-500 mr-2">Edit</button>
+                    <button onClick={() => handleEditStudent(student)} className="text-blue-500 mr-2">Edit</button>
                     <button onClick={() => deleteStudent(student._id)} className="text-red-500">Delete</button>
                   </td>
                 </tr>
@@ -304,7 +348,32 @@ export default function AdminPage() {
               <input type="text" placeholder="Student ID*" className="input text-sm" value={formData.studentId} onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} required />
               <input type="text" placeholder="Full Name*" className="input text-sm" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
               <input type="text" placeholder="Father's Name*" className="input text-sm" value={formData.fatherName} onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })} required />
-              <input type="text" placeholder="Class*" className="input text-sm" value={formData.className} onChange={(e) => setFormData({ ...formData, className: e.target.value })} required />
+              
+              {/* Class Number Input - User enters just the number */}
+              <div>
+                <label className="label">Class (1-12)*</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  placeholder="Enter class number (e.g., 9)"
+                  className="input text-sm"
+                  value={formData.classNumber}
+                  onChange={(e) => {
+                    const num = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      classNumber: num,
+                      className: num ? `Class ${num}` : ''
+                    });
+                  }}
+                  required
+                />
+                {formData.className && (
+                  <p className="text-xs mt-1 opacity-70">Will be saved as: <strong>{formData.className}</strong></p>
+                )}
+              </div>
+              
               <input type="email" placeholder="Parent Email*" className="input text-sm" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} required />
               <input type="tel" placeholder="Parent WhatsApp" className="input text-sm" value={formData.parentPhone} onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })} />
               <div className="flex gap-3 pt-3">
@@ -325,7 +394,32 @@ export default function AdminPage() {
               <input type="text" placeholder="Student ID*" className="input text-sm" value={editFormData.studentId} onChange={(e) => setEditFormData({ ...editFormData, studentId: e.target.value })} required />
               <input type="text" placeholder="Full Name*" className="input text-sm" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} required />
               <input type="text" placeholder="Father's Name*" className="input text-sm" value={editFormData.fatherName} onChange={(e) => setEditFormData({ ...editFormData, fatherName: e.target.value })} required />
-              <input type="text" placeholder="Class*" className="input text-sm" value={editFormData.className} onChange={(e) => setEditFormData({ ...editFormData, className: e.target.value })} required />
+              
+              {/* Class Number Input for Edit */}
+              <div>
+                <label className="label">Class (1-12)*</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  placeholder="Enter class number (e.g., 9)"
+                  className="input text-sm"
+                  value={editFormData.classNumber}
+                  onChange={(e) => {
+                    const num = e.target.value;
+                    setEditFormData({ 
+                      ...editFormData, 
+                      classNumber: num,
+                      className: num ? `Class ${num}` : ''
+                    });
+                  }}
+                  required
+                />
+                {editFormData.className && (
+                  <p className="text-xs mt-1 opacity-70">Will be saved as: <strong>{editFormData.className}</strong></p>
+                )}
+              </div>
+              
               <input type="email" placeholder="Parent Email*" className="input text-sm" value={editFormData.contactEmail} onChange={(e) => setEditFormData({ ...editFormData, contactEmail: e.target.value })} required />
               <input type="tel" placeholder="Parent WhatsApp" className="input text-sm" value={editFormData.parentPhone} onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })} />
               <textarea placeholder="Address" className="input text-sm" rows={2} value={editFormData.address} onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} />

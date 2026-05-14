@@ -50,18 +50,18 @@ export default function BulkImportPage() {
   };
 
   const downloadTemplate = () => {
-    const template = `name,fatherName,studentId,className,contactEmail,parentPhone
+  const template = `name,fatherName,studentId,className,contactEmail,parentPhone
 Ali Khan,Khan Nawaz,BC190200651,Class 10,parent@email.com,03001234567
 Sara Ahmed,Ahmed Ali,BC190200652,Class 9,sara.parent@email.com,03007654321`;
-    
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'student_import_template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  
+  const blob = new Blob([template], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'student_import_template.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
   return (
     <div>
