@@ -1,3 +1,4 @@
+import { connectDB } from '@/lib/db';
 import ActivityLog from '@/lib/models/ActivityLog';
 
 export async function logActivity(
@@ -10,6 +11,7 @@ export async function logActivity(
   targetId?: string
 ) {
   try {
+    await connectDB();
     await ActivityLog.create({
       adminId,
       adminName,
@@ -18,8 +20,9 @@ export async function logActivity(
       details,
       targetType,
       targetId,
-      ip: 'server', // You can add real IP if needed
+      ip: 'server',
     });
+    console.log(`📝 Logged: ${action} by ${adminName}`);
   } catch (error) {
     console.error('Failed to log activity:', error);
   }
