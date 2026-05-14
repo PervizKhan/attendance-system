@@ -6,7 +6,7 @@ const ActivityLogSchema = new mongoose.Schema({
   adminEmail: { type: String, required: true },
   action: { type: String, required: true },
   details: { type: String },
-  targetType: { type: String, enum: ['student', 'attendance', 'admin', 'system'] },
+  targetType: { type: String, enum: ['student', 'staff', 'attendance', 'admin', 'system'] },
   targetId: { type: String },
   ip: { type: String },
   createdAt: { type: Date, default: Date.now },
