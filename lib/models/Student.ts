@@ -1,17 +1,17 @@
 import mongoose from 'mongoose';
 
 const StudentSchema = new mongoose.Schema({
-  studentId: { type: String, required: true, unique: true },   // e.g., BC190200651
-  rollNo: { type: String },                                     // Optional
+  studentId: { type: String, required: true, unique: true },
+  rollNo: { type: String },
   name: { type: String, required: true },
   fatherName: { type: String, required: true },
-  className: { type: String, required: true },                  // e.g., "10th Grade", "BS CS 3rd"
+  className: { type: String, required: true },
   address: { type: String },
-  contactEmail: { type: String, required: true },               // Parent/Guardian email
-  contactPhone: { type: String },                               // Optional for SMS
+  contactEmail: { type: String, default: '' },   // now optional
+  contactPhone: { type: String },
+  parentPhone: { type: String, required: true }, // now required for SMS
+  notificationMethod: { type: String, enum: ['sms', 'both'], default: 'sms' },
   faceDescriptor: { type: [Number], default: null },
-  parentPhone: { type: String },
-  notificationMethod: { type: String, enum: ['email', 'sms', 'both'], default: 'email' },            // 128 numbers from face-api
   isActive: { type: Boolean, default: true },
   registeredAt: { type: Date, default: Date.now },
 }, { timestamps: true });
