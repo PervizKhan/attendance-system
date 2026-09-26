@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       if (!studentData.fatherName) missingFields.push('fatherName');
       if (!studentData.studentId) missingFields.push('studentId');
       if (!studentData.className) missingFields.push('className');
-      if (!studentData.contactEmail) missingFields.push('contactEmail');
+      if (!studentData.parentPhone) missingFields.push('parentPhone');
       
       if (missingFields.length > 0) {
         errors.push(`Row ${i}: Missing required fields: ${missingFields.join(', ')}`);

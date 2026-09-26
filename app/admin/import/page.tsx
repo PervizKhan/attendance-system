@@ -51,8 +51,8 @@ export default function BulkImportPage() {
 
   const downloadTemplate = () => {
   const template = `name,fatherName,studentId,className,contactEmail,parentPhone
-Ali Khan,Khan Nawaz,BC190200651,Class 10,parent@email.com,03001234567
-Sara Ahmed,Ahmed Ali,BC190200652,Class 9,sara.parent@email.com,03007654321`;
+Ali Khan,Nisar Ahmad,0044-26,Class 10,abc@gmail.com,03001234567
+Sara Ahmed,Ahmed Ali,0045-26,Class 9,sara@gmail.com,03007654321`;
   
   const blob = new Blob([template], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -174,8 +174,8 @@ Sara Ahmed,Ahmed Ali,BC190200652,Class 9,sara.parent@email.com,03007654321`;
           <li>• fatherName - Father's/Guardian's name (required)</li>
           <li>• studentId - Unique student ID (required)</li>
           <li>• className - Class name (required)</li>
-          <li>• contactEmail - Parent email for notifications (required)</li>
-          <li>• parentPhone - Parent WhatsApp/SMS number (optional)</li>
+          <li>• contactEmail - Parent email for notifications (optional)</li>
+          <li>• parentPhone - Parent WhatsApp/SMS number (required)</li>
         </ul>
       </div>
     </div>
