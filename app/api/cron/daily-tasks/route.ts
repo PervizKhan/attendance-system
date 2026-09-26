@@ -9,9 +9,8 @@ import { sendAbsentSMS } from '@/lib/sms';
 import { getPKTDayRange, getPKTDateString, isPKTSunday } from '@/lib/date';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 3000000; // 50 minutes, to allow for many SMS sends
-
-const SEND_DELAY_MS = 300000; // 5 minutes between SMS attempts to avoid rate limits
+export const maxDuration = 300;        // 5 min — max realistic ceiling
+const SEND_DELAY_MS = 3000;            // 3 seconds between sends
 
 export async function GET(req: NextRequest) {
   // --- Auth: require CRON_SECRET ---
