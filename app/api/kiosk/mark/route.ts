@@ -1,99 +1,104 @@
+// app/api/kiosk/mark/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Attendance from '@/lib/models/Attendance';
 import Student from '@/lib/models/Student';
 import Holiday from '@/lib/models/Holiday';
+import { getPKTDayRange } from '@/lib/date';
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    
+
     const { studentId, confidence, location } = await req.json();
-    
+
     if (!studentId) {
       return NextResponse.json({ error: 'Student ID required' }, { status: 400 });
     }
-    
-    // Check if today is a holiday
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
+    // PKT day range
+    const { start: dayStart, end: dayEnd } = getPKTDayRange();
+
+    // Holiday check
     const holiday = await Holiday.findOne({
-      date: { $gte: today, $lt: tomorrow }
+      date: { $gte: dayStart, $lt: dayEnd },
     });
-    
+
     if (holiday) {
-      return NextResponse.json({ 
-        success: false, 
-        message: `Today is a holiday (${holiday.name}). No attendance required.`,
-        isHoliday: true,
-        holidayName: holiday.name
-      }, { status: 200 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Today is a holiday (${holiday.name}). No attendance required.`,
+          isHoliday: true,
+          holidayName: holiday.name,
+        },
+        { status: 200 }
+      );
     }
-    
-    // Check if already marked today
+
+    // Already marked today?
     const existing = await Attendance.findOne({
       studentId,
-      date: { $gte: today }
+      date: { $gte: dayStart, $lt: dayEnd },
     });
-    
+
     if (existing) {
-      return NextResponse.json({ 
-        success: false,
-        message: 'Attendance already marked today',
-        alreadyMarked: true,
-        status: existing.status
-      }, { status: 200 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Attendance already marked today',
+          alreadyMarked: true,
+          status: existing.status,
+        },
+        { status: 200 }
+      );
     }
-    
-    // Get student
+
     const student = await Student.findById(studentId);
     if (!student) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
-    
-    // Check if student is late (after 8:30 AM)
+
+    // Late check (after 8:30 AM PKT)
     const now = new Date();
-    const cutoffTime = new Date();
-    cutoffTime.setHours(8, 30, 0, 0); // 8:30 AM cutoff
-    
-    const isLate = now > cutoffTime;
+    // PKT "now" as if it were the server's local time, for hour/minute comparison
+    const pktNow = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+    const pktHour = pktNow.getUTCHours();
+    const pktMinute = pktNow.getUTCMinutes();
+    const isLate = pktHour > 8 || (pktHour === 8 && pktMinute > 30);
     const status = isLate ? 'late' : 'present';
-    
-    // Create attendance record
+
     const attendance = await Attendance.create({
       studentId,
-      date: today,
+      date: dayStart,
       timeIn: now,
       confidence: confidence || 0.95,
-      status: status,
+      status,
       location: location || 'school_gate',
-      emailSent: false
+      markedBy: 'face',
     });
-    
-    const statusMessage = status === 'late' ? '⚠️ Marked as LATE' : '✅ Present';
-    console.log(`${statusMessage} for ${student.name} at ${now.toLocaleTimeString()}`);
-    
+
+    const statusMessage = isLate ? '⚠️ Marked as LATE' : '✅ Present';
+    console.log(
+      `${statusMessage} for ${student.name} at ${pktNow.toISOString().slice(11, 19)} PKT`
+    );
+
     return NextResponse.json({
       success: true,
-      message: `Attendance marked for ${student.name}${status === 'late' ? ' (Late)' : ''}`,
-      status: status,
-      isLate: isLate,
+      message: `Attendance marked for ${student.name}${isLate ? ' (Late)' : ''}`,
+      status,
+      isLate,
       student: {
         name: student.name,
         studentId: student.studentId,
         className: student.className,
-        email: student.contactEmail
       },
       attendance: {
         time: attendance.timeIn,
         confidence: attendance.confidence,
-        status: attendance.status
-      }
+        status: attendance.status,
+      },
     });
-    
   } catch (error) {
     console.error('Error marking attendance:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

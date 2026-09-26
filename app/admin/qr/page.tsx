@@ -1,3 +1,4 @@
+// app/admin/qr/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,10 +20,17 @@ export default function QRPage() {
   }, []);
 
   const fetchStudents = async () => {
-    const res = await fetch('/api/admin/students');
-    const data = await res.json();
-    setStudents(data.filter((s: any) => s.parentPhone));
-    setLoading(false);
+    try {
+      const res = await fetch('/api/admin/students');
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : [];
+      setStudents(list.filter((s: Student) => s.parentPhone));
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const generateOptInLink = (phone: string, name: string) => {
@@ -44,19 +52,25 @@ export default function QRPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">WhatsApp QR Codes</h1>
-      <p className="text-gray-600 mb-6">Print these QR codes and paste at school gate. Parents scan to receive attendance notifications.</p>
-      
+      <p className="text-gray-600 mb-6">
+        Print these QR codes and paste at the school gate. Parents scan to opt in
+        to attendance notifications.
+      </p>
+
       {students.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No WhatsApp numbers added. Edit students to add WhatsApp numbers.
+          No parent phone numbers added. Edit students to add numbers.
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {students.map((student) => {
             const link = generateOptInLink(student.parentPhone, student.name);
-            
+
             return (
-              <div key={student._id} className="bg-white rounded-xl p-4 text-center shadow">
+              <div
+                key={student._id}
+                className="bg-white rounded-xl p-4 text-center shadow"
+              >
                 <QRCodeSVG value={link} size={150} />
                 <p className="font-semibold mt-3">{student.name}</p>
                 <p className="text-xs text-gray-500">{student.studentId}</p>

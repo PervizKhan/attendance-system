@@ -9,7 +9,7 @@ const AttendanceSchema = new mongoose.Schema(
       required: true,
     },
     date: { type: Date, required: true, default: Date.now },
-    timeIn: { type: Date },              // ← no longer required, no default
+    timeIn: { type: Date },              // optional — absent students have no arrival time
     timeOut: { type: Date },
     status: {
       type: String,
@@ -19,7 +19,6 @@ const AttendanceSchema = new mongoose.Schema(
     confidence: { type: Number },
     location: { type: String, default: 'school_gate' },
     markedBy: { type: String, default: 'face' },
-    emailSent: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

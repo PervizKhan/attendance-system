@@ -1,33 +1,34 @@
+// app/api/admin/face-train/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Student from '@/lib/models/Student';
-import Staff from '@/lib/models/Staff';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// Get training status
+// GET → training completion stats (students only)
 export async function GET() {
+  const user = await requireAdmin();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     await connectDB();
-    
+
     const studentsWithFace = await Student.countDocuments({
-      faceDescriptor: { $exists: true, $ne: null }
+      faceDescriptor: { $exists: true, $ne: null },
     });
-    
-    const staffWithFace = await Staff.countDocuments({
-      faceDescriptor: { $exists: true, $ne: null }
-    });
-    
+
     const totalStudents = await Student.countDocuments({ isActive: true });
-    const totalStaff = await Staff.countDocuments({ isActive: true });
-    
+
     return NextResponse.json({
       studentsWithFace,
       totalStudents,
-      staffWithFace,
-      totalStaff,
-      studentCompletion: totalStudents > 0 ? Math.round((studentsWithFace / totalStudents) * 100) : 0,
-      staffCompletion: totalStaff > 0 ? Math.round((staffWithFace / totalStaff) * 100) : 0,
+      studentCompletion:
+        totalStudents > 0
+          ? Math.round((studentsWithFace / totalStudents) * 100)
+          : 0,
     });
   } catch (error) {
     console.error('Error fetching training status:', error);
@@ -35,37 +36,51 @@ export async function GET() {
   }
 }
 
-// Retrain a specific student's face
+// POST → retrain a single student's face
 export async function POST(req: NextRequest) {
+  const user = await requireAdmin();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     await connectDB();
-    const { type, id, faceDescriptor } = await req.json();
-    
-    if (!id || !faceDescriptor) {
-      return NextResponse.json({ error: 'ID and face descriptor required' }, { status: 400 });
+
+    const body = await req.json().catch(() => null);
+    const id = body?.id;
+    const faceDescriptor = body?.faceDescriptor;
+
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json({ error: 'Student ID required' }, { status: 400 });
     }
-    
-    let updated;
-    if (type === 'student') {
-      updated = await Student.findByIdAndUpdate(
-        id,
-        { faceDescriptor, updatedAt: new Date() },
-        { new: true }
+
+    if (
+      !Array.isArray(faceDescriptor) ||
+      faceDescriptor.length === 0 ||
+      !faceDescriptor.every(
+        (n) => typeof n === 'number' && Number.isFinite(n)
+      )
+    ) {
+      return NextResponse.json(
+        { error: 'faceDescriptor must be a non-empty array of numbers' },
+        { status: 400 }
       );
-    } else if (type === 'staff') {
-      updated = await Staff.findByIdAndUpdate(
-        id,
-        { faceDescriptor, updatedAt: new Date() },
-        { new: true }
-      );
-    } else {
-      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
-    
+
+    const updated = await Student.findByIdAndUpdate(
+      id,
+      { faceDescriptor },
+      { new: true }
+    ).select('_id name studentId className');
+
+    if (!updated) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `${updated?.name} face retrained successfully`,
-      name: updated?.name
+      message: `${updated.name} face retrained successfully`,
+      name: updated.name,
     });
   } catch (error) {
     console.error('Error retraining face:', error);

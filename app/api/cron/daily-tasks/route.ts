@@ -9,11 +9,12 @@ import { sendAbsentSMS } from '@/lib/sms';
 import { getPKTDayRange, getPKTDateString, isPKTSunday } from '@/lib/date';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;        // 5 min — max realistic ceiling
-const SEND_DELAY_MS = 3000;            // 3 seconds between sends
+export const maxDuration = 60;
+
+const MAX_SENDS_PER_RUN = 15;
+const SEND_DELAY_MS = 3000;
 
 export async function GET(req: NextRequest) {
-  // --- Auth: require CRON_SECRET ---
   const expected = process.env.CRON_SECRET;
   if (!expected) {
     console.error('CRON_SECRET is not configured');
@@ -30,12 +31,10 @@ export async function GET(req: NextRequest) {
     const dateStr = getPKTDateString();
     const { start: dayStart, end: dayEnd } = getPKTDayRange(dateStr);
 
-    // Weekly holiday check (Sunday in PKT)
     if (isPKTSunday(dateStr)) {
       return NextResponse.json({ message: 'Weekly holiday', skipped: true });
     }
 
-    // Declared holiday check
     const holiday = await Holiday.findOne({
       date: { $gte: dayStart, $lt: dayEnd },
     });
@@ -46,10 +45,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Active students
     const students = await Student.find({ isActive: true });
 
-    // Who is present or late today
     const presentIds = await Attendance.find({
       date: { $gte: dayStart, $lt: dayEnd },
       status: { $in: ['present', 'late'] },
@@ -67,10 +64,12 @@ export async function GET(req: NextRequest) {
         absentees: 0,
         smsSent: 0,
         smsFailed: 0,
+        smsSkipped: 0,
+        done: true,
       });
     }
 
-    // Mark absent in Attendance (idempotent — only create if not already recorded)
+    // Mark absent in Attendance — no timeIn for absentees
     for (const student of absentees) {
       const existing = await Attendance.findOne({
         studentId: student._id,
@@ -86,13 +85,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Send SMS + log — skip students already successfully notified today
     let sentCount = 0;
     let failedCount = 0;
     let skippedCount = 0;
+    let processedThisRun = 0;
+    let remaining = 0;
 
     for (const student of absentees) {
-      // Idempotency: skip if a successful send already exists for today
       const alreadySent = await SMSLog.exists({
         studentId: student._id,
         date: { $gte: dayStart, $lt: dayEnd },
@@ -100,6 +99,11 @@ export async function GET(req: NextRequest) {
       });
       if (alreadySent) {
         skippedCount++;
+        continue;
+      }
+
+      if (processedThisRun >= MAX_SENDS_PER_RUN) {
+        remaining++;
         continue;
       }
 
@@ -121,6 +125,7 @@ export async function GET(req: NextRequest) {
           console.error('SMSLog write failed (no phone):', logErr);
         }
         failedCount++;
+        processedThisRun++;
         continue;
       }
 
@@ -162,8 +167,11 @@ export async function GET(req: NextRequest) {
         failedCount++;
       }
 
-      // Rate limit between attempts (real sends or failures)
-      await new Promise((r) => setTimeout(r, SEND_DELAY_MS));
+      processedThisRun++;
+
+      if (processedThisRun < MAX_SENDS_PER_RUN) {
+        await new Promise((r) => setTimeout(r, SEND_DELAY_MS));
+      }
     }
 
     return NextResponse.json({
@@ -173,6 +181,8 @@ export async function GET(req: NextRequest) {
       smsSent: sentCount,
       smsFailed: failedCount,
       smsSkipped: skippedCount,
+      remaining,
+      done: remaining === 0,
     });
   } catch (error) {
     console.error('Daily task error:', error);

@@ -13,19 +13,18 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/admin',               label: '👨‍🎓',          title: 'Students' },
-  { href: '/admin/staff',         label: '👨‍🏫',          title: 'Staff' },
-  { href: '/admin/dashboard',     label: '📊',            title: 'Dashboard' },
-  { href: '/admin/attendance',    label: '📋',            title: 'Attendance' },
-  { href: '/admin/absent-today',  label: '📵 Absent',     title: 'Absent Today' },
-  { href: '/admin/qr',            label: '📱',            title: 'QR Codes' },
-  { href: '/admin/import',        label: '📥',            title: 'Import' },
-  { href: '/admin/holidays',      label: '📅',            title: 'Holidays' },
-  { href: '/admin/logs',          label: '📜',            title: 'Logs' },
-  { href: '/admin/backup',        label: '💾',            title: 'Backup' },
-  { href: '/admin/actions',       label: '⚡',            title: 'Actions' },
-  { href: '/admin/admins',        label: '👥 Admins',     title: 'Admins' },
-  { href: '/admin/face-training', label: '🎯 Face Training', title: 'Face Training' },
+  { href: '/admin',               label: '👨‍🎓',              title: 'Students' },
+  { href: '/admin/dashboard',     label: '📊',                title: 'Dashboard' },
+  { href: '/admin/attendance',    label: '📋',                title: 'Attendance' },
+  { href: '/admin/absent-today',  label: '📵 Absent',         title: 'Absent Today' },
+  { href: '/admin/qr',            label: '📱',                title: 'QR Codes' },
+  { href: '/admin/import',        label: '📥',                title: 'Import' },
+  { href: '/admin/holidays',      label: '📅',                title: 'Holidays' },
+  { href: '/admin/logs',          label: '📜',                title: 'Logs' },
+  { href: '/admin/backup',        label: '💾',                title: 'Backup' },
+  { href: '/admin/actions',       label: '⚡',                title: 'Actions' },
+  { href: '/admin/admins',        label: '👥 Admins',         title: 'Admins' },
+  { href: '/admin/face-training', label: '🎯 Face Training',  title: 'Face Training' },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -141,10 +140,7 @@ export default function AdminLayout({
       </div>
 
       {/* Nav */}
-      <nav
-        aria-label="Admin navigation"
-        className="px-4 pt-4"
-      >
+      <nav aria-label="Admin navigation" className="px-4 pt-4">
         <div
           className="flex gap-2 overflow-x-auto pb-2 -mb-0.5 scrollbar-thin"
           style={{ WebkitOverflowScrolling: 'touch' }}
